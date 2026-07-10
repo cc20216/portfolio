@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC · 作品集 | 全栈开发 & 大数据</title>
+<meta name="description" content="CC 的个人作品集 — 大数据专业全栈开发者，展示 StudyHub AI学习管理系统、有米的小馆决策陪伴、标准对数视力表测试等项目。">
+<meta name="keywords" content="全栈开发, Django, MySQL, AI, 大数据, 作品集, 学习管理系统">
+<meta name="author" content="CC">
+
+<!-- Open Graph / Social Sharing -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="CC · 作品集 | 全栈开发 & 大数据">
+<meta property="og:description" content="大数据专业全栈开发者 — StudyHub AI学习管理系统、有米的小馆、标准视力表测试">
+<meta property="og:image" content="assets/screenshots/dashboard.png">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%231B4D4A'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='%23F5F2EC' font-family='serif' font-weight='bold'>C</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ========================================
+   Design System: "Quiet Atelier"
+   A calm, editorial portfolio aesthetic
+   ======================================== */
+
+:root {
+  /* Colors - warm, natural palette */
+  --bg: #F5F2EC;
+  --bg-alt: #EDE9E0;
+  --bg-card: #FAF8F3;
+  --ink: #1C1C1A;
+  --ink-soft: #5C5A55;
+  --ink-faint: #9C9A93;
+  --forest: #1B4D4A;
+  --forest-light: #2D6A66;
+  --forest-glow: rgba(27, 77, 74, 0.08);
+  --coral: #E07856;
+  --coral-soft: rgba(224, 120, 86, 0.12);
+  --sage: #8BA888;
+  --sage-soft: rgba(139, 168, 136, 0.15);
+  --line: rgba(28, 28, 26, 0.08);
+  --line-strong: rgba(28, 28, 26, 0.15);
+  --shadow-sm: 0 1px 3px rgba(28, 28, 26, 0.04), 0 4px 12px rgba(28, 28, 26, 0.03);
+  --shadow-md: 0 4px 16px rgba(28, 28, 26, 0.06), 0 12px 40px rgba(28, 28, 26, 0.04);
+  --shadow-lg: 0 8px 32px rgba(28, 28, 26, 0.08), 0 24px 64px rgba(28, 28, 26, 0.06);
+
+  /* Typography */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 2rem;
+  --space-lg: 4rem;
+  --space-xl: 8rem;
+  --max-w: 1200px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================
+   Scroll Progress Bar
+   ======================================== */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--coral);
+  z-index: 200;
+  width: 0%;
+  transition: width 0.1s ease;
+}
+
+/* ========================================
+   Back to Top Button
+   ======================================== */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 44px;
+  height: 44px;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 90;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.back-to-top:hover {
+  background: var(--forest);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(27, 77, 74, 0.25);
+}
+
+/* ========================================
+   Accessibility - Focus Styles
+   ======================================== */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Page transition */
+.page-fade {
+  animation: pageFadeIn 0.6s ease;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Grain texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ========================================
+   Navigation
+   ======================================== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 1.2rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(245, 242, 236, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  transition: all 0.4s ease;
+}
+
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-logo .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--coral);
+  display: inline-block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  align-items: center;
+}
+
+.nav-links a {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--forest);
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover { color: var(--ink); }
+.nav-links a:hover::after { width: 100%; }
+
+.nav-cta {
+  padding: 0.5rem 1.2rem;
+  background: var(--ink);
+  color: var(--bg) !important;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.nav-cta::after { display: none; }
+.nav-cta:hover { background: var(--forest); transform: translateY(-1px); }
+
+/* ========================================
+   Hero Section
+   ======================================== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 6rem 2rem 4rem;
+  overflow: hidden;
+}
+
+/* Decorative background elements */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+}
+
+.hero-blob-1 {
+  width: 500px;
+  height: 500px;
+  background: var(--sage-soft);
+  top: -100px;
+  right: -100px;
+  animation: float 20s ease-in-out infinite;
+}
+
+.hero-blob-2 {
+  width: 400px;
+  height: 400px;
+  background: var(--coral-soft);
+  bottom: -50px;
+  left: -80px;
+  animation: float 25s ease-in-out infinite reverse;
+}
+
+.hero-blob-3 {
+  width: 300px;
+  height: 300px;
+  background: var(--forest-glow);
+  top: 40%;
+  left: 50%;
+  animation: float 18s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: var(--max-w);
+  width: 100%;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-bottom: 2rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.2s forwards;
+}
+
+.hero-eyebrow .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sage);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 5.5rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.4s forwards;
+}
+
+.hero-title em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--forest);
+}
+
+.hero-title .accent {
+  color: var(--coral);
+  font-style: italic;
+  font-weight: 300;
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: var(--ink-soft);
+  max-width: 540px;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.6s forwards;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.8s forwards;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.8rem;
+  border-radius: 100px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.btn-primary:hover {
+  background: var(--forest);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(27, 77, 74, 0.2);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
+
+.btn-outline:hover {
+  background: var(--bg-card);
+  border-color: var(--ink-soft);
+  transform: translateY(-2px);
+}
+
+.btn .arrow {
+  transition: transform 0.3s ease;
+}
+
+.btn:hover .arrow {
+  transform: translateX(4px);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero stats */
+.hero-stats {
+  display: flex;
+  gap: 3rem;
+  margin-top: 4rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 1s forwards;
+}
+
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-stat-num {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--forest);
+  line-height: 1;
+}
+
+.hero-stat-label {
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+  margin-top: 0.3rem;
+}
+
+/* Scroll indicator */
+.scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  animation: fadeIn 1s ease 1.5s forwards;
+}
+
+.scroll-hint::after {
+  content: '';
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--ink-faint), transparent);
+  animation: scrollLine 2s ease-in-out infinite;
+}
+
+@keyframes scrollLine {
+  0%, 100% { transform: scaleY(0.3); transform-origin: top; }
+  50% { transform: scaleY(1); transform-origin: top; }
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* ========================================
+   Section Common
+   ======================================== */
+.section {
+  padding: var(--space-xl) 2rem;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  position: relative;
+}
+
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--coral);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 1rem;
+}
+
+.section-label::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: var(--coral);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.section-title em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--forest);
+}
+
+.section-desc {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  max-width: 600px;
+  margin-bottom: 3rem;
+}
+
+/* ========================================
+   About / Skills Section
+   ======================================== */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+.about-text p {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  line-height: 1.8;
+  margin-bottom: 1.2rem;
+}
+
+.about-text p strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.skill-card {
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.skill-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--forest);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.skill-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--line-strong);
+}
+
+.skill-card:hover::before {
+  transform: scaleX(1);
+}
+
+.skill-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+}
+
+.skill-card:nth-child(1) .skill-icon { background: var(--forest-glow); color: var(--forest); }
+.skill-card:nth-child(2) .skill-icon { background: var(--coral-soft); color: var(--coral); }
+.skill-card:nth-child(3) .skill-icon { background: var(--sage-soft); color: var(--sage); }
+.skill-card:nth-child(4) .skill-icon { background: var(--forest-glow); color: var(--forest); }
+
+.skill-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+}
+
+.skill-tags {
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+/* ========================================
+   Projects Section
+   ======================================== */
+.projects-section {
+  background: var(--bg-alt);
+  padding: var(--space-xl) 0;
+  margin-top: var(--space-lg);
+}
+
+.projects-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Project Card - the signature element */
+.project-card {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+
+.project-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--line-strong);
+}
+
+/* Project thumbnail */
+.project-thumb {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-alt);
+  min-height: 280px;
+}
+
+.project-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.project-card:hover .project-thumb img {
+  transform: scale(1.05);
+}
+
+/* Thumbnail hover overlay */
+.project-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(27, 77, 74, 0.85), rgba(28, 28, 26, 0.8));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 3;
+}
+
+.project-card:hover .project-thumb-overlay {
+  opacity: 1;
+}
+
+.thumb-overlay-content {
+  text-align: center;
+  transform: translateY(10px);
+  transition: transform 0.4s ease;
+}
+
+.project-card:hover .thumb-overlay-content {
+  transform: translateY(0);
+}
+
+.thumb-overlay-text {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--bg);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.thumb-overlay-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: rgba(245, 242, 236, 0.7);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* For projects without screenshots, use CSS art */
+.project-thumb-art {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Vision test art */
+.art-vision {
+  background: linear-gradient(135deg, #E8F4F0 0%, #D0E8E0 100%);
+}
+
+.art-vision::before {
+  content: 'E';
+  font-family: var(--font-display);
+  font-weight: 900;
+  color: var(--forest);
+  position: absolute;
+  font-size: 4rem;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.art-vision::after {
+  content: 'E E E E\nE E E\nE E\nE';
+  white-space: pre;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--forest-light);
+  position: absolute;
+  font-size: 1.5rem;
+  text-align: center;
+  line-height: 1.8;
+  top: 45%;
+  left: 50%;
+  transform: translateX(-50%);
+  letter-spacing: 0.3em;
+  opacity: 0.6;
+}
+
+/* Project info */
+.project-info {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.project-number {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  margin-bottom: 0.8rem;
+}
+
+.project-name {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.project-card:hover .project-name {
+  color: var(--forest);
+}
+
+.project-tagline {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin-bottom: 1.2rem;
+  line-height: 1.6;
+}
+
+.project-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+}
+
+.tech-tag {
+  padding: 0.25rem 0.7rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.project-card:hover .tech-tag {
+  border-color: var(--line-strong);
+}
+
+.project-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--forest);
+  margin-top: auto;
+  transition: gap 0.3s ease;
+}
+
+.project-card:hover .project-cta {
+  gap: 0.8rem;
+}
+
+.project-cta .arrow {
+  transition: transform 0.3s ease;
+}
+
+.project-card:hover .project-cta .arrow {
+  transform: translateX(4px);
+}
+
+/* Project badge */
+.project-badge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.badge-featured {
+  background: var(--forest);
+  color: var(--bg);
+}
+
+.badge-game {
+  background: var(--coral);
+  color: white;
+}
+
+.badge-app {
+  background: var(--sage);
+  color: white;
+}
+
+/* ========================================
+   Contact / Footer
+   ======================================== */
+.contact-section {
+  padding: var(--space-xl) 2rem;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.contact-cta {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+.contact-cta em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--forest);
+}
+
+.contact-desc {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  max-width: 500px;
+  margin: 0 auto 2.5rem;
+}
+
+.contact-links {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  font-size: 0.9rem;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.contact-link:hover {
+  background: var(--ink);
+  color: var(--bg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+footer {
+  padding: 2rem;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+/* ========================================
+   Scroll Reveal
+   ======================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+@media (max-width: 900px) {
+  .nav { padding: 1rem 1.5rem; }
+  .nav-links { gap: 1rem; }
+  .nav-links a:not(.nav-cta) { display: none; }
+
+  .hero { padding: 5rem 1.5rem 3rem; }
+  .hero-stats { gap: 2rem; }
+
+  .section { padding: 4rem 1.5rem; }
+  .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+
+  .project-card {
+    grid-template-columns: 1fr;
+  }
+  .project-thumb { min-height: 200px; }
+  .project-info { padding: 1.5rem; }
+
+  .back-to-top { bottom: 1.2rem; right: 1.2rem; }
+}
+
+@media (max-width: 600px) {
+  .skills-grid { grid-template-columns: 1fr; }
+  .hero-stats { flex-wrap: wrap; }
+  .hero-actions { flex-direction: column; }
+  .btn { justify-content: center; }
+
+  /* Mobile menu toggle */
+  .nav-mobile-toggle {
+    display: flex !important;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+  }
+  .nav-mobile-toggle span {
+    width: 22px;
+    height: 2px;
+    background: var(--ink);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+  .nav-mobile-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-mobile-toggle.active span:nth-child(2) { opacity: 0; }
+  .nav-mobile-toggle.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .nav-links.mobile-open {
+    display: flex !important;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--line);
+    gap: 1.2rem;
+  }
+  .nav-links.mobile-open a { display: block !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <span class="dot"></span>
+    CC<span style="color: var(--ink-faint); font-weight: 400;">.dev</span>
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">关于</a></li>
+    <li><a href="#projects">作品</a></li>
+    <li><a href="https://github.com/cc20216" target="_blank">GitHub</a></li>
+    <li><a href="#contact" class="nav-cta">联系我</a></li>
+  </ul>
+  <button class="nav-mobile-toggle" id="navToggle" style="display: none;" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-blob hero-blob-3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span class="status-dot"></span>
+      大数据专业 · 全栈开发方向
+    </div>
+    <h1 class="hero-title">
+      用代码<em>构建</em>，<br>
+      用数据<span class="accent">思考</span>。
+    </h1>
+    <p class="hero-subtitle">
+      我是 CC，一名大数据专业的全栈开发者。善于将前后端技术与 AI 能力结合，从 AI 驱动的学习管理系统到治愈系互动应用，把每一个想法落地成可运行的产品。
+    </p>
+    <div class="hero-actions">
+      <a href="#projects" class="btn btn-primary">
+        查看作品
+        <svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="https://github.com/cc20216" target="_blank" class="btn btn-outline">
+        GitHub 主页
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">3+</div>
+        <div class="hero-stat-label">完整项目</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">24</div>
+        <div class="hero-stat-label">AI 角色表情</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">AI</div>
+        <div class="hero-stat-label">大模型集成</div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">向下滚动</div>
+</section>
+
+<!-- About / Skills -->
+<section class="section" id="about">
+  <div class="reveal">
+    <div class="section-label">ABOUT</div>
+    <h2 class="section-title">技术能力与<em>方向</em></h2>
+    <p class="section-desc">大数据专业背景，专注于全栈开发。从后端架构到前端交互，从数据库设计到 AI 集成，具备完整的产品开发能力。</p>
+  </div>
+
+  <div class="about-grid">
+    <div class="about-text reveal">
+      <p>我是一名<strong>大数据专业</strong>的学生，对编程和产品开发有浓厚的兴趣。在学习过程中，我独立完成了多个项目，涵盖 <strong>Web 全栈开发、AI 应用集成、创意互动应用</strong>等方向。</p>
+      <p>代表性作品包括 <strong>StudyHub 智能学习管理系统</strong>（Django + MySQL + AI 大模型，11 张数据表）、<strong>有米的小馆</strong>（TRAE AI 创造力大赛参赛作品，24 种 AI 角色表情的治愈系 Web 应用）、以及基于<strong>国家标准 GB 11533-2011</strong> 的在线视力测试工具。</p>
+      <p>除了后端开发，我也注重前端体验。从数据可视化到 Canvas 动画，从 AI 角色设计到音效合成，我喜欢把功能做得既好用又好看。</p>
+    </div>
+
+    <div class="skills-grid reveal">
+      <div class="skill-card">
+        <div class="skill-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <div class="skill-name">后端开发</div>
+        <div class="skill-tags">Django · Python · REST API</div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+        </div>
+        <div class="skill-name">前端交互</div>
+        <div class="skill-tags">Canvas · Web Audio · CSS3 动画</div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+        </div>
+        <div class="skill-name">数据库设计</div>
+        <div class="skill-tags">MySQL · 数据建模 · SQL 优化</div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
+        </div>
+        <div class="skill-name">AI 集成</div>
+        <div class="skill-tags">ModelScope · Qwen · Prompt Engineering</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Projects -->
+<section class="projects-section" id="projects">
+  <div class="projects-inner">
+    <div class="reveal">
+      <div class="section-label">PROJECTS</div>
+      <h2 class="section-title">精选<em>作品</em></h2>
+      <p class="section-desc">三个独立完成的项目，展示从全栈系统到互动应用的完整开发能力。点击卡片查看详情。</p>
+    </div>
+
+    <div class="projects-list">
+      <!-- Project 1: StudyHub -->
+      <a href="studyhub.html" class="project-card reveal">
+        <div class="project-thumb">
+          <img src="assets/screenshots/dashboard.png" alt="StudyHub Dashboard">
+          <div class="project-badge badge-featured">Featured</div>
+          <div class="project-thumb-overlay">
+            <div class="thumb-overlay-content">
+              <div class="thumb-overlay-text">查看项目详情</div>
+              <div class="thumb-overlay-arrow">View Case Study →</div>
+            </div>
+          </div>
+        </div>
+        <div class="project-info">
+          <div class="project-number">01 / 全栈系统</div>
+          <h3 class="project-name">StudyHub · 智能学习管理系统</h3>
+          <p class="project-tagline">基于 Django + MySQL + AI 大模型的全栈学习平台。AI 自动生成学习计划与内容，学习热力图追踪进度，番茄钟辅助专注，覆盖"学什么 → 怎么学 → 学得怎么样"完整闭环。</p>
+          <div class="project-tech">
+            <span class="tech-tag">Django 3.2</span>
+            <span class="tech-tag">MySQL 8.0</span>
+            <span class="tech-tag">ModelScope Qwen</span>
+            <span class="tech-tag">Chart.js</span>
+            <span class="tech-tag">Tailwind CSS</span>
+            <span class="tech-tag">11 张数据表</span>
+          </div>
+          <div class="project-cta">
+            查看项目详情
+            <svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </a>
+
+      <!-- Project 2: Younis Diner -->
+      <a href="younis.html" class="project-card reveal">
+        <div class="project-thumb">
+          <img src="assets/screenshots/younis-wheel.png" alt="有米的小馆" style="object-fit: cover; object-position: center top;">
+          <div class="project-badge badge-game">AI参赛作品</div>
+          <div class="project-thumb-overlay">
+            <div class="thumb-overlay-content">
+              <div class="thumb-overlay-text">查看项目详情</div>
+              <div class="thumb-overlay-arrow">View Case Study →</div>
+            </div>
+          </div>
+        </div>
+        <div class="project-info">
+          <div class="project-number">02 / AI 创意应用</div>
+          <h3 class="project-name">有米的小馆 · 治愈系决策陪伴</h3>
+          <p class="project-tagline">TRAE AI 创造力大赛参赛作品。一只记得你口味的电子仓鼠侍者，通过口味偏好学习、权重转盘、反馈养成和记忆系统，帮你决定今天吃什么。24 种 AI 生成角色表情，纯前端 Canvas 实现。</p>
+          <div class="project-tech">
+            <span class="tech-tag">HTML/CSS/JS</span>
+            <span class="tech-tag">Canvas</span>
+            <span class="tech-tag">Web Audio API</span>
+            <span class="tech-tag">localStorage</span>
+            <span class="tech-tag">24 种 AI 角色</span>
+          </div>
+          <div class="project-cta">
+            查看项目详情
+            <svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </a>
+
+      <!-- Project 3: Vision Test -->
+      <a href="vision-test.html" class="project-card reveal">
+        <div class="project-thumb">
+          <div class="project-thumb-art art-vision"></div>
+          <div class="project-badge badge-app">国标工具</div>
+          <div class="project-thumb-overlay">
+            <div class="thumb-overlay-content">
+              <div class="thumb-overlay-text">查看项目详情</div>
+              <div class="thumb-overlay-arrow">View Case Study →</div>
+            </div>
+          </div>
+        </div>
+        <div class="project-info">
+          <div class="project-number">03 / 实用工具</div>
+          <h3 class="project-name">标准对数视力表 · E视力测试</h3>
+          <p class="project-tagline">基于 GB 11533-2011 国家标准开发的在线视力自测工具。14 个标准视力级别，Canvas 矢量绘制 E 字视标，支持 40cm~6m 多距离调节，纯前端单文件实现，数据不离开设备。</p>
+          <div class="project-tech">
+            <span class="tech-tag">HTML/CSS/JS</span>
+            <span class="tech-tag">Canvas 矢量绘制</span>
+            <span class="tech-tag">GB 11533-2011</span>
+            <span class="tech-tag">高DPI适配</span>
+            <span class="tech-tag">单文件零依赖</span>
+          </div>
+          <div class="project-cta">
+            查看项目详情
+            <svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section class="contact-section" id="contact">
+  <div class="reveal">
+    <h2 class="contact-cta">有兴趣<em>合作</em>？</h2>
+    <p class="contact-desc">如果你觉得我的作品还不错，欢迎通过以下方式联系我。无论是实习机会还是项目合作，都很期待。</p>
+    <div class="contact-links">
+      <a href="https://github.com/cc20216" target="_blank" class="contact-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+      <a href="mailto:cc20216@example.com" class="contact-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>
+        Email
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 CC · 用代码构建，用数据思考
+</footer>
+
+<!-- Back to Top Button -->
+<button class="back-to-top" id="backToTop" aria-label="返回顶部">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+
+<script>
+// ========================================
+// Scroll Reveal Animation
+// ========================================
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ========================================
+// Nav: background + scroll progress + back to top
+// ========================================
+const nav = document.querySelector('.nav');
+const scrollProgress = document.getElementById('scrollProgress');
+const backToTop = document.getElementById('backToTop');
+
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const scrollPercent = (scrollTop / docHeight) * 100;
+
+  // Nav background
+  if (scrollTop > 50) {
+    nav.style.background = 'rgba(245, 242, 236, 0.92)';
+    nav.style.boxShadow = '0 1px 12px rgba(28, 28, 26, 0.04)';
+  } else {
+    nav.style.background = 'rgba(245, 242, 236, 0.7)';
+    nav.style.boxShadow = 'none';
+  }
+
+  // Scroll progress bar
+  scrollProgress.style.width = scrollPercent + '%';
+
+  // Back to top button
+  if (scrollTop > 600) {
+    backToTop.classList.add('visible');
+  } else {
+    backToTop.classList.remove('visible');
+  }
+});
+
+// Back to top click
+backToTop.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ========================================
+// Mobile Menu Toggle
+// ========================================
+const navToggle = document.getElementById('navToggle');
+const navLinks = document.getElementById('navLinks');
+
+function checkMobile() {
+  if (window.innerWidth <= 600) {
+    navToggle.style.display = 'flex';
+  } else {
+    navToggle.style.display = 'none';
+    navLinks.classList.remove('mobile-open');
+    navToggle.classList.remove('active');
+  }
+}
+
+checkMobile();
+window.addEventListener('resize', checkMobile);
+
+navToggle.addEventListener('click', () => {
+  navToggle.classList.toggle('active');
+  navLinks.classList.toggle('mobile-open');
+});
+
+// Close mobile menu when clicking a link
+navLinks.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    navLinks.classList.remove('mobile-open');
+    navToggle.classList.remove('active');
+  });
+});
+
+// ========================================
+// Smooth scroll for anchor links
+// ========================================
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ========================================
+// Project card click transition
+// ========================================
+document.querySelectorAll('.project-card').forEach(card => {
+  card.addEventListener('click', function(e) {
+    // Add a subtle fade effect before navigating
+    e.preventDefault();
+    document.body.style.transition = 'opacity 0.3s ease';
+    document.body.style.opacity = '0.6';
+    setTimeout(() => {
+      window.location.href = this.href;
+    }, 200);
+  });
+});
+
+// Page fade-in on load
+document.body.classList.add('page-fade');
+</script>
+
+</body>
+</html>
