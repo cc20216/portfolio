@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>有米的小馆 · 治愈系决策陪伴 | CC 作品集</title>
+<meta name="description" content="有米的小馆 — TRAE AI 创造力大赛参赛作品。一只记得你口味的电子仓鼠侍者，通过口味偏好学习、权重转盘、反馈养成与记忆系统，帮你决定今天吃什么。纯前端 Canvas 实现，24 种 AI 生成角色表情。">
+<meta name="keywords" content="有米的小馆, TRAE AI, 创造力大赛, Canvas, Web Audio, 治愈系, 决策辅助, 仓鼠侍者">
+<meta name="author" content="CC">
+<meta property="og:type" content="website">
+<meta property="og:title" content="有米的小馆 · 治愈系决策陪伴 | CC 作品集">
+<meta property="og:description" content="一只记得你口味的电子仓鼠侍者 — TRAE AI 创造力大赛参赛作品">
+<meta property="og:image" content="assets/screenshots/younis-wheel.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23E07856'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='%23F5F2EC' font-family='serif' font-weight='bold'>米</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ========================================
+   Design System: "Quiet Atelier"
+   Cozy tavern extension for Younis Diner
+   ======================================== */
+
+:root {
+  /* Colors - warm, natural palette */
+  --bg: #F5F2EC;
+  --bg-alt: #EDE9E0;
+  --bg-card: #FAF8F3;
+  --ink: #1C1C1A;
+  --ink-soft: #5C5A55;
+  --ink-faint: #9C9A93;
+  --forest: #1B4D4A;
+  --forest-light: #2D6A66;
+  --forest-glow: rgba(27, 77, 74, 0.08);
+  --coral: #E07856;
+  --coral-soft: rgba(224, 120, 86, 0.12);
+  --sage: #8BA888;
+  --sage-soft: rgba(139, 168, 136, 0.15);
+  --line: rgba(28, 28, 26, 0.08);
+  --line-strong: rgba(28, 28, 26, 0.15);
+  --shadow-sm: 0 1px 3px rgba(28, 28, 26, 0.04), 0 4px 12px rgba(28, 28, 26, 0.03);
+  --shadow-md: 0 4px 16px rgba(28, 28, 26, 0.06), 0 12px 40px rgba(28, 28, 26, 0.04);
+  --shadow-lg: 0 8px 32px rgba(28, 28, 26, 0.08), 0 24px 64px rgba(28, 28, 26, 0.06);
+
+  /* Cozy tavern warm tones (hero / character showcase) */
+  --amber-light: #FFF8EC;
+  --amber: #FFE8C8;
+  --amber-deep: #FFD9A8;
+  --honey: #F5C77E;
+  --tavern-glow: rgba(245, 199, 126, 0.25);
+
+  /* Typography */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--ink); line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+/* Grain texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ========================================
+   Scroll Progress Bar
+   ======================================== */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--coral);
+  z-index: 200;
+  width: 0%;
+  transition: width 0.1s ease;
+}
+
+/* ========================================
+   Back to Top Button
+   ======================================== */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 44px;
+  height: 44px;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 90;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+.back-to-top.visible { opacity: 1; pointer-events: auto; }
+.back-to-top:hover { background: var(--forest); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(27, 77, 74, 0.25); }
+
+/* Focus styles */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Page transition */
+.page-fade { animation: pageFadeIn 0.6s ease; }
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================
+   Navigation
+   ======================================== */
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(245, 242, 236, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); transition: all 0.4s ease; }
+.nav-logo { font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+.nav-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); display: inline-block; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+.nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+.nav-links a { font-size: 0.875rem; color: var(--ink-soft); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
+.nav-links a:hover { color: var(--ink); }
+.nav-back { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--line); border-radius: 100px; font-size: 0.8rem; color: var(--ink-soft); text-decoration: none; transition: all 0.3s ease; }
+.nav-back:hover { background: var(--ink); color: var(--bg); transform: translateX(-2px); }
+
+/* ========================================
+   Project Header
+   ======================================== */
+.project-header { padding: 8rem 2rem 4rem; max-width: 1200px; margin: 0 auto; position: relative; }
+.header-breadcrumb { font-family: var(--font-mono); font-size: 0.75rem; color: var(--coral); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.header-breadcrumb::before { content: ''; width: 24px; height: 1px; background: var(--coral); }
+.project-title { font-family: var(--font-display); font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 1rem; }
+.project-title em { font-style: italic; font-weight: 300; color: var(--forest); }
+.project-subtitle { font-size: 1.15rem; color: var(--ink-soft); max-width: 620px; line-height: 1.7; margin-bottom: 2rem; }
+.project-meta { display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+.meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+.meta-label { font-size: 0.75rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.1em; }
+.meta-value { font-size: 0.95rem; color: var(--ink); font-weight: 500; }
+.project-links { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.6rem; border-radius: 100px; font-size: 0.9rem; font-weight: 500; text-decoration: none; transition: all 0.3s ease; border: none; cursor: pointer; }
+.btn-primary { background: var(--forest); color: var(--bg); }
+.btn-primary:hover { background: var(--ink); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(27, 77, 74, 0.2); }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--line-strong); }
+.btn-outline:hover { background: var(--bg-card); border-color: var(--ink-soft); transform: translateY(-2px); }
+
+/* ========================================
+   Hero Image Section (cozy tavern gradient)
+   ======================================== */
+.hero-image { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.hero-image-frame { position: relative; overflow: hidden; border-radius: 24px; background: linear-gradient(135deg, var(--amber-light) 0%, var(--amber) 50%, var(--amber-deep) 100%); border: 1px solid var(--line); box-shadow: var(--shadow-lg); padding: 2.5rem; display: flex; align-items: center; justify-content: center; }
+.hero-image-frame::before { content: ''; position: absolute; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, var(--tavern-glow) 0%, transparent 70%); top: -80px; right: -80px; pointer-events: none; }
+.hero-image-frame::after { content: ''; position: absolute; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(224, 120, 86, 0.10) 0%, transparent 70%); bottom: -60px; left: -60px; pointer-events: none; }
+.hero-image-frame img { width: 100%; max-width: 460px; border-radius: 18px; box-shadow: 0 12px 40px rgba(122, 80, 40, 0.18); position: relative; z-index: 1; display: block; }
+.hero-tag { position: absolute; top: 1.5rem; left: 1.5rem; z-index: 2; font-family: var(--font-mono); font-size: 0.7rem; color: #8A5A2B; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px); padding: 0.4rem 0.9rem; border-radius: 100px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid rgba(245, 199, 126, 0.4); }
+
+/* ========================================
+   Sections common
+   ======================================== */
+.section { padding: 4rem 2rem; max-width: 1200px; margin: 0 auto; position: relative; }
+.section-label { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--coral); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.8rem; }
+.section-label::before { content: ''; width: 24px; height: 1px; background: var(--coral); }
+.section-title { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 2rem; }
+.section-title em { font-style: italic; font-weight: 300; color: var(--forest); }
+.section-desc { font-size: 1.05rem; color: var(--ink-soft); max-width: 640px; margin-bottom: 2.5rem; line-height: 1.7; }
+
+/* ========================================
+   Character Showcase (cozy aesthetic)
+   ======================================== */
+.character-section { background: linear-gradient(180deg, var(--amber-light) 0%, #FFF1DA 100%); padding: 5rem 2rem; margin: 2rem 0; position: relative; overflow: hidden; }
+.character-section::before { content: ''; position: absolute; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, var(--tavern-glow) 0%, transparent 70%); top: -100px; left: -100px; pointer-events: none; }
+.character-inner { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+.character-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 2rem; }
+.character-card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+.character-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--honey); }
+.character-img-wrap { aspect-ratio: 1 / 1; background: linear-gradient(160deg, #FFF6E6 0%, #FFE9CC 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+.character-img-wrap img { width: 78%; height: 78%; object-fit: contain; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); filter: drop-shadow(0 6px 14px rgba(122, 80, 40, 0.12)); }
+.character-card:hover .character-img-wrap img { transform: scale(1.06) translateY(-3px); }
+.character-info { padding: 1rem 1.2rem 1.3rem; text-align: center; }
+.character-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--coral); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.3rem; }
+.character-name { font-family: var(--font-display); font-size: 1.05rem; font-weight: 500; color: var(--ink); }
+.character-note { margin-top: 1.5rem; padding: 1rem 1.4rem; background: rgba(255, 255, 255, 0.55); border: 1px dashed rgba(245, 199, 126, 0.6); border-radius: 14px; font-size: 0.85rem; color: #6B4A2A; text-align: center; line-height: 1.6; }
+
+/* ========================================
+   Features grid
+   ======================================== */
+.features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+.feature-card { padding: 2rem; background: var(--bg-card); border: 1px solid var(--line); border-radius: 20px; transition: all 0.4s ease; position: relative; overflow: hidden; }
+.feature-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--forest); transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease; }
+.feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--line-strong); }
+.feature-card:hover::after { transform: scaleX(1); }
+.feature-num { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-faint); margin-bottom: 0.8rem; }
+.feature-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; background: var(--forest-glow); color: var(--forest); }
+.feature-card:nth-child(2) .feature-icon { background: var(--coral-soft); color: var(--coral); }
+.feature-card:nth-child(3) .feature-icon { background: var(--sage-soft); color: var(--sage); }
+.feature-card:nth-child(4) .feature-icon { background: var(--coral-soft); color: var(--coral); }
+.feature-title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 500; margin-bottom: 0.5rem; }
+.feature-desc { font-size: 0.9rem; color: var(--ink-soft); line-height: 1.65; }
+
+/* ========================================
+   Screenshot gallery
+   ======================================== */
+.gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1.5rem; }
+.gallery-item { border-radius: 16px; overflow: hidden; border: 1px solid var(--line); transition: all 0.4s ease; cursor: pointer; background: var(--bg-card); }
+.gallery-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.gallery-item img { width: 100%; display: block; transition: transform 0.6s ease; }
+.gallery-item:hover img { transform: scale(1.03); }
+.gallery-caption { padding: 1rem 1.2rem; font-size: 0.85rem; color: var(--ink-soft); display: flex; align-items: center; gap: 0.5rem; }
+.gallery-caption .num { font-family: var(--font-mono); font-size: 0.7rem; color: var(--coral); font-weight: 500; }
+
+/* ========================================
+   Interaction flow (5 steps)
+   ======================================== */
+.flow-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
+.flow-step { display: grid; grid-template-columns: 80px 1fr auto; gap: 1.5rem; align-items: center; padding: 1.6rem 1.8rem; background: var(--bg-card); border: 1px solid var(--line); border-radius: 18px; transition: all 0.4s ease; }
+.flow-step:hover { transform: translateX(6px); box-shadow: var(--shadow-md); border-color: var(--line-strong); }
+.flow-num { font-family: var(--font-display); font-size: 2.2rem; font-weight: 400; color: var(--forest); line-height: 1; font-style: italic; }
+.flow-body { display: flex; flex-direction: column; gap: 0.3rem; }
+.flow-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 500; color: var(--ink); }
+.flow-desc { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.6; }
+.flow-tag { font-family: var(--font-mono); font-size: 0.7rem; color: var(--coral); background: var(--coral-soft); padding: 0.35rem 0.8rem; border-radius: 100px; white-space: nowrap; }
+
+/* ========================================
+   Weight algorithm section
+   ======================================== */
+.algo-wrap { background: var(--bg-card); border: 1px solid var(--line); border-radius: 24px; padding: 2.5rem; margin-top: 1.5rem; }
+.algo-formula { font-family: var(--font-display); font-size: clamp(1rem, 2.2vw, 1.4rem); font-weight: 500; color: var(--ink); text-align: center; padding: 1.5rem; background: linear-gradient(135deg, var(--forest-glow), var(--coral-soft)); border-radius: 16px; margin-bottom: 2rem; line-height: 1.8; }
+.algo-formula .var { color: var(--forest); font-style: italic; }
+.algo-formula .op { color: var(--coral); margin: 0 0.3rem; font-style: normal; }
+.algo-formula .eq { color: var(--ink-faint); margin: 0 0.5rem; }
+.algo-factors { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.algo-factor { padding: 1.3rem 1.5rem; border: 1px solid var(--line); border-radius: 14px; transition: all 0.3s ease; background: var(--bg); }
+.algo-factor:hover { border-color: var(--honey); transform: translateY(-2px); }
+.algo-factor-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.algo-factor-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; background: var(--forest-glow); color: var(--forest); }
+.algo-factor:nth-child(2) .algo-factor-icon { background: var(--coral-soft); color: var(--coral); }
+.algo-factor:nth-child(3) .algo-factor-icon { background: var(--sage-soft); color: var(--sage); }
+.algo-factor:nth-child(4) .algo-factor-icon { background: var(--forest-glow); color: var(--forest); }
+.algo-factor:nth-child(5) .algo-factor-icon { background: var(--coral-soft); color: var(--coral); }
+.algo-factor-name { font-family: var(--font-display); font-size: 1rem; font-weight: 500; color: var(--ink); }
+.algo-factor-desc { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.55; }
+.algo-footnote { margin-top: 1.5rem; padding: 1rem 1.4rem; background: var(--coral-soft); border-left: 3px solid var(--coral); border-radius: 8px; font-size: 0.85rem; color: var(--ink-soft); }
+.algo-footnote strong { color: var(--coral); }
+
+/* ========================================
+   Tech stack
+   ======================================== */
+.tech-stack { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem; }
+.tech-row { display: flex; align-items: center; gap: 1rem; padding: 1.2rem 1.5rem; background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; transition: all 0.3s ease; }
+.tech-row:hover { border-color: var(--line-strong); background: var(--bg); transform: translateY(-2px); }
+.tech-row-icon { font-family: var(--font-mono); font-size: 0.8rem; color: var(--coral); font-weight: 500; min-width: 32px; }
+.tech-row-name { font-size: 0.95rem; font-weight: 600; color: var(--ink); }
+.tech-row-desc { font-size: 0.8rem; color: var(--ink-faint); }
+
+/* ========================================
+   Emotional design (three layers)
+   ======================================== */
+.emotion-section { background: var(--bg-alt); padding: 5rem 2rem; margin: 3rem 0; }
+.emotion-inner { max-width: 1200px; margin: 0 auto; }
+.emotion-layers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; }
+.emotion-card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 20px; padding: 2.2rem; transition: all 0.4s ease; position: relative; overflow: hidden; }
+.emotion-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--line-strong); }
+.emotion-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+.emotion-card:nth-child(1)::before { background: var(--sage); }
+.emotion-card:nth-child(2)::before { background: var(--honey); }
+.emotion-card:nth-child(3)::before { background: var(--coral); }
+.emotion-stage { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.6rem; }
+.emotion-key { font-family: var(--font-display); font-size: 1.8rem; font-weight: 500; margin-bottom: 0.8rem; line-height: 1.2; }
+.emotion-key em { font-style: italic; font-weight: 300; }
+.emotion-card:nth-child(1) .emotion-key em { color: var(--sage); }
+.emotion-card:nth-child(2) .emotion-key em { color: #C9933A; }
+.emotion-card:nth-child(3) .emotion-key em { color: var(--coral); }
+.emotion-desc { font-size: 0.9rem; color: var(--ink-soft); line-height: 1.7; margin-bottom: 1.2rem; }
+.emotion-quote { font-family: var(--font-display); font-style: italic; font-size: 0.92rem; color: var(--ink); padding-left: 0.9rem; border-left: 2px solid var(--line-strong); line-height: 1.5; }
+.emotion-arrow { text-align: center; color: var(--ink-faint); font-size: 1.4rem; margin: 0.8rem 0; display: none; }
+
+/* ========================================
+   Next project
+   ======================================== */
+.next-project { background: var(--bg-alt); padding: 5rem 2rem; margin-top: 4rem; }
+.next-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap; }
+.next-label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--coral); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.5rem; }
+.next-title { font-family: var(--font-display); font-size: 2rem; font-weight: 400; color: var(--ink); }
+.next-title em { font-style: italic; font-weight: 300; color: var(--sage); }
+.next-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; background: var(--ink); color: var(--bg); border-radius: 100px; text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: all 0.3s ease; }
+.next-btn:hover { background: var(--forest); transform: translateX(4px); box-shadow: 0 8px 24px rgba(27, 77, 74, 0.2); }
+
+footer { padding: 2rem; text-align: center; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--ink-faint); }
+
+/* ========================================
+   Scroll Reveal
+   ======================================== */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease, transform 0.8s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ========================================
+   Responsive
+   ======================================== */
+@media (max-width: 900px) {
+  .nav { padding: 1rem 1.5rem; }
+  .nav-links { gap: 1rem; }
+  .nav-links a:not(.nav-back) { display: none; }
+  .project-header { padding: 6rem 1.5rem 3rem; }
+  .section { padding: 3rem 1.5rem; }
+  .character-section, .emotion-section { padding: 3.5rem 1.5rem; }
+  .character-grid { grid-template-columns: repeat(2, 1fr); }
+  .features-grid { grid-template-columns: 1fr; }
+  .gallery { grid-template-columns: 1fr; }
+  .tech-stack { grid-template-columns: 1fr; }
+  .algo-factors { grid-template-columns: 1fr; }
+  .algo-wrap { padding: 1.5rem; }
+  .emotion-layers { grid-template-columns: 1fr; }
+  .emotion-arrow { display: block; }
+  .hero-image { padding: 0 1.5rem; }
+  .hero-image-frame { padding: 1.5rem; }
+  .flow-step { grid-template-columns: 56px 1fr; }
+  .flow-tag { grid-column: 2; justify-self: start; }
+}
+
+@media (max-width: 600px) {
+  .character-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .project-meta { gap: 1.2rem; }
+  .hero-image-frame img { max-width: 100%; }
+  .flow-step { padding: 1.3rem; gap: 1rem; }
+  .flow-num { font-size: 1.8rem; }
+  .next-inner { flex-direction: column; align-items: flex-start; }
+  .back-to-top { bottom: 1.2rem; right: 1.2rem; }
+}
+</style>
+</head>
+<body>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <span class="dot"></span>
+    CC<span style="color: var(--ink-faint); font-weight: 400;">.dev</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html#projects">所有作品</a></li>
+    <li><a href="studyhub.html">上一个项目</a></li>
+    <li><a href="index.html" class="nav-back">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13 8H3M7 4L3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      返回主页
+    </a></li>
+  </ul>
+</nav>
+
+<!-- 3. Project Header -->
+<section class="project-header">
+  <div class="header-breadcrumb">PROJECT 02 / AI 创意应用</div>
+  <h1 class="project-title">有米的小馆<br><em>治愈系决策陪伴</em></h1>
+  <p class="project-subtitle">
+    一只记得你口味的电子仓鼠侍者。「有米的小馆」是一款生活决策辅助 × 模拟养成 × 治愈陪伴的 Web 应用——主角有米帮你决定今天吃什么，但不是冷冰冰的随机数生成器，它会记住你不吃芹菜，记得下雨天你总想喝热汤，记得你连续吃辣三天后第四天该换换口味了。
+  </p>
+  <div class="project-meta">
+    <div class="meta-item">
+      <div class="meta-label">类型</div>
+      <div class="meta-value">TRAE AI 创造力大赛 · 生活娱乐赛道</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">技术栈</div>
+      <div class="meta-value">纯前端 HTML + CSS + JS (Canvas)</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">特性</div>
+      <div class="meta-value">24 种 AI 角色 · 权重转盘 · 记忆系统</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">角色</div>
+      <div class="meta-value">独立开发 · TRAE AI IDE</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">状态</div>
+      <div class="meta-value">已上线 · 开源</div>
+    </div>
+  </div>
+  <div class="project-links">
+    <a href="https://github.com/cc20216/younis-diner" target="_blank" class="btn btn-primary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      查看源码
+    </a>
+    <a href="https://youni-demo.surge.sh/" target="_blank" class="btn btn-outline">
+      在线体验
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- 4. Hero image section -->
+<div class="hero-image reveal">
+  <div class="hero-image-frame">
+    <span class="hero-tag">Younis Diner · 经典小馆</span>
+    <img src="assets/screenshots/younis-wheel.png" alt="有米的小馆 — 权重转盘主界面">
+  </div>
+</div>
+
+<!-- 5. Character showcase -->
+<section class="character-section">
+  <div class="character-inner">
+    <div class="reveal">
+      <div class="section-label">CHARACTER</div>
+      <h2 class="section-title">有米 · <em>你的仓鼠侍者</em></h2>
+      <p class="section-desc">奶白色的小仓鼠，戴着圆框眼镜，系着白色围裙，经营着一家隐藏在人类世界与食物世界之间的"经典小馆"。24 种 AI 生成表情姿态，全部抠图为透明背景，根据转盘状态实时切换——附带定时眨眼与闲置小动作。</p>
+    </div>
+    <div class="character-grid">
+      <div class="character-card reveal">
+        <div class="character-img-wrap">
+          <img src="assets/screenshots/youni-default.png" alt="有米 · 默认站立">
+        </div>
+        <div class="character-info">
+          <div class="character-label">姿态 01</div>
+          <div class="character-name">默认站立</div>
+        </div>
+      </div>
+      <div class="character-card reveal">
+        <div class="character-img-wrap">
+          <img src="assets/screenshots/youni-happy.png" alt="有米 · 开心">
+        </div>
+        <div class="character-info">
+          <div class="character-label">姿态 02</div>
+          <div class="character-name">开心反馈</div>
+        </div>
+      </div>
+      <div class="character-card reveal">
+        <div class="character-img-wrap">
+          <img src="assets/screenshots/youni-chef.png" alt="有米 · 烹饪">
+        </div>
+        <div class="character-info">
+          <div class="character-label">姿态 03</div>
+          <div class="character-name">烹饪登场</div>
+        </div>
+      </div>
+      <div class="character-card reveal">
+        <div class="character-img-wrap">
+          <img src="assets/screenshots/youni-thinking.png" alt="有米 · 思考">
+        </div>
+        <div class="character-info">
+          <div class="character-label">姿态 04</div>
+          <div class="character-name">思考转盘</div>
+        </div>
+      </div>
+    </div>
+    <p class="character-note reveal">表情分类：默认/日常 (10) · 侍者/互动 (6) · 孵化/登场 (3) · 转盘/反馈 (3) · 问候/互动 (2) — 共 24 种 AI 生成姿态</p>
+  </div>
+</section>
+
+<!-- 6. Features -->
+<section class="section">
+  <div class="reveal">
+    <div class="section-label">FEATURES</div>
+    <h2 class="section-title">核心<em>功能</em></h2>
+    <p class="section-desc">四个功能模块环环相扣——从认识你的口味，到帮你做决定，再到记住每一次反馈，让"今天吃什么"变成一场有温度的互动。</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-num">01</div>
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="feature-title">口味偏好学习</div>
+      <div class="feature-desc">首次进入时，有米会像侍者一样问辣度偏好、汤类喜好、有没有忌口。你的回答被用歪歪扭扭的粉笔字"记在小黑板上"，成为后续推荐的基底。</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-num">02</div>
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/></svg>
+      </div>
+      <div class="feature-title">权重转盘</div>
+      <div class="feature-desc">输入想吃的选项，根据口味偏好、天气、历史反馈，把选项变成大小不一的转盘扇区。爱吃的会大一点，最近吃多了的会小一点。支持"加一批"追加（最多 12 个）、"换一换"全部替换、自定义输入。</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-num">03</div>
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6L8 14 2 9.4h7.6z"/></svg>
+      </div>
+      <div class="feature-title">反馈养成</div>
+      <div class="feature-desc">转盘出结果后，告诉有米"好吃"或"踩雷"。好吃 → 围裙口袋飞出金色小星星；踩雷 → 耳朵垂下来，掏出小手帕擦汗，追问原因。你的每一次反馈都让它更懂你。</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-num">04</div>
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 11h5"/></svg>
+      </div>
+      <div class="feature-title">记忆系统</div>
+      <div class="feature-desc">有米用"小本本"记录每次反馈。不吃的食物 → 权重归零；下雨天 → 自动推荐热汤；连续吃辣 → 降低辣菜权重；历史踩雷 → 记住教训。它越用越懂你。</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Screenshots gallery -->
+<section class="section">
+  <div class="reveal">
+    <div class="section-label">SCREENSHOTS</div>
+    <h2 class="section-title">界面<em>展示</em></h2>
+    <p class="section-desc">从蛋壳孵化开场，到口味偏好设置，再到权重转盘主界面——三个关键场景呈现有米小馆的完整体验。</p>
+  </div>
+  <div class="gallery">
+    <div class="gallery-item reveal">
+      <img src="assets/screenshots/younis-opening.png" alt="蛋壳孵化开场">
+      <div class="gallery-caption"><span class="num">01</span>蛋壳孵化 · 温暖灯光下有米登场</div>
+    </div>
+    <div class="gallery-item reveal">
+      <img src="assets/screenshots/younis-preferences.png" alt="口味偏好设置">
+      <div class="gallery-caption"><span class="num">02</span>口味偏好 · 侍者口吻询问辣度忌口</div>
+    </div>
+    <div class="gallery-item reveal">
+      <img src="assets/screenshots/younis-wheel.png" alt="权重转盘主界面">
+      <div class="gallery-caption"><span class="num">03</span>权重转盘 · 有米 + 转盘 + 输入区域</div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Interaction flow -->
+<section class="section">
+  <div class="reveal">
+    <div class="section-label">INTERACTION FLOW</div>
+    <h2 class="section-title">交互<em>流程</em></h2>
+    <p class="section-desc">五个阶段层层递进，从一只蛋开始，到一本记录你口味的小本本结束——每一步都在悄悄建立你与有米之间的默契。</p>
+  </div>
+  <div class="flow-list">
+    <div class="flow-step reveal">
+      <div class="flow-num">01</div>
+      <div class="flow-body">
+        <div class="flow-title">蛋壳孵化</div>
+        <div class="flow-desc">温暖灯光下蛋壳轻轻摇晃，点击后裂开，有米登场——第一次见面，从一个温柔的仪式开始。</div>
+      </div>
+      <span class="flow-tag">Hatching</span>
+    </div>
+    <div class="flow-step reveal">
+      <div class="flow-num">02</div>
+      <div class="flow-body">
+        <div class="flow-title">口味偏好问答</div>
+        <div class="flow-desc">有米以侍者口吻询问辣度偏好、汤类喜好、有没有忌口，回答被记在"小黑板"上。</div>
+      </div>
+      <span class="flow-tag">Onboarding</span>
+    </div>
+    <div class="flow-step reveal">
+      <div class="flow-num">03</div>
+      <div class="flow-body">
+        <div class="flow-title">权重转盘</div>
+        <div class="flow-desc">主界面：有米 + 转盘 + 输入区域。支持键盘快捷键——空格转动转盘、R 刷新选项，移动端原生体验。</div>
+      </div>
+      <span class="flow-tag">Main · 375×667</span>
+    </div>
+    <div class="flow-step reveal">
+      <div class="flow-num">04</div>
+      <div class="flow-body">
+        <div class="flow-title">结果反馈</div>
+        <div class="flow-desc">转盘结果出炉后选择"好吃"或"踩雷"，触发对应角色表情与触觉振动，让反馈有即时回响。</div>
+      </div>
+      <span class="flow-tag">Feedback · Vibrate</span>
+    </div>
+    <div class="flow-step reveal">
+      <div class="flow-num">05</div>
+      <div class="flow-body">
+        <div class="flow-title">记忆小本本</div>
+        <div class="flow-desc">随时查看历史互动记录——有米把你每一次的口味反馈都妥帖地记在了它的小本本里。</div>
+      </div>
+      <span class="flow-tag">Memory</span>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Weight algorithm -->
+<section class="section">
+  <div class="reveal">
+    <div class="section-label">WEIGHT ALGORITHM</div>
+    <h2 class="section-title">权重<em>算法</em></h2>
+    <p class="section-desc">转盘上每个扇区的大小不是随机的。有米把你的口味、当天的天气、历史反馈揉进一个加权公式里，让"爱吃的"更大、"吃腻的"更小。</p>
+  </div>
+  <div class="algo-wrap reveal">
+    <div class="algo-formula">
+      <span class="var">最终权重</span><span class="eq">=</span>
+      <span class="var">偏好匹配度</span><span class="op">×</span>
+      <span class="var">天气加成</span><span class="op">×</span>
+      <span class="var">顺序加成</span><span class="op">×</span>
+      <span class="var">历史调整</span><span class="op">×</span>
+      <span class="var">忌口过滤</span>
+    </div>
+    <div class="algo-factors">
+      <div class="algo-factor">
+        <div class="algo-factor-head">
+          <div class="algo-factor-icon">A</div>
+          <div class="algo-factor-name">偏好匹配度</div>
+        </div>
+        <div class="algo-factor-desc">用户口味与菜品的匹配程度——辣度、汤类喜好等小黑板上的记录，决定基础权重。</div>
+      </div>
+      <div class="algo-factor">
+        <div class="algo-factor-head">
+          <div class="algo-factor-icon">B</div>
+          <div class="algo-factor-name">天气加成</div>
+        </div>
+        <div class="algo-factor-desc">下雨天 → 热汤类权重提升。有米知道雨天你总想喝点热乎的。</div>
+      </div>
+      <div class="algo-factor">
+        <div class="algo-factor-head">
+          <div class="algo-factor-icon">C</div>
+          <div class="algo-factor-name">顺序加成</div>
+        </div>
+        <div class="algo-factor-desc">第一个选项 +0.1 额外权重，给输入顺序一点点温柔的偏爱。</div>
+      </div>
+      <div class="algo-factor">
+        <div class="algo-factor-head">
+          <div class="algo-factor-icon">D</div>
+          <div class="algo-factor-name">历史调整</div>
+        </div>
+        <div class="algo-factor-desc">近期吃过多的降低权重，踩雷过的直接归零——有米记得你的教训。</div>
+      </div>
+      <div class="algo-factor">
+        <div class="algo-factor-head">
+          <div class="algo-factor-icon">E</div>
+          <div class="algo-factor-name">忌口过滤</div>
+        </div>
+        <div class="algo-factor-desc">包含忌口关键词的选项 → 权重设为 0，绝不出现在转盘上。</div>
+      </div>
+      <div class="algo-factor">
+        <div class="algo-factor-head">
+          <div class="algo-factor-icon">F</div>
+          <div class="algo-factor-name">扇区下限保护</div>
+        </div>
+        <div class="algo-factor-desc">扇区最小占比 8%，确保每个选项都清晰可见，不会被完全挤掉。</div>
+      </div>
+    </div>
+    <div class="algo-footnote">
+      <strong>设计取舍：</strong>扇区最小占比 8% 是一个刻意的平衡——既保留权重差异带来的"偏爱感"，又不让任何选项小到看不见，维护转盘的公平与可读性。
+    </div>
+  </div>
+</section>
+
+<!-- 10. Tech stack -->
+<section class="section">
+  <div class="reveal">
+    <div class="section-label">TECH STACK</div>
+    <h2 class="section-title">技术<em>实现</em></h2>
+    <p class="section-desc">纯前端单文件实现，零后端依赖。Canvas 状态栈、WebP 内嵌方案、Web Audio 音效合成与角色状态机，把一只治愈系仓鼠装进了 473KB。</p>
+  </div>
+  <div class="tech-stack reveal">
+    <div class="tech-row">
+      <div class="tech-row-icon">01</div>
+      <div>
+        <div class="tech-row-name">Canvas 状态栈管理</div>
+        <div class="tech-row-desc">ctx.save() / restore() 严格配对，转盘绘制干净可控</div>
+      </div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-row-icon">02</div>
+      <div>
+        <div class="tech-row-name">WebP 内嵌方案</div>
+        <div class="tech-row-desc">24 张角色图 + 2 张背景图 base64 内嵌，总计 473KB</div>
+      </div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-row-icon">03</div>
+      <div>
+        <div class="tech-row-name">Web Audio 音效合成</div>
+        <div class="tech-row-desc">转盘咔嗒声 (330Hz, 0.05s)、星星飞出音效、BGM 实时合成</div>
+      </div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-row-icon">04</div>
+      <div>
+        <div class="tech-row-name">角色状态机</div>
+        <div class="tech-row-desc">IDLE / HATCHING / THINKING / DRAWING 四态平滑过渡</div>
+      </div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-row-icon">05</div>
+      <div>
+        <div class="tech-row-name">数据持久化</div>
+        <div class="tech-row-desc">localStorage 记录口味偏好与历史反馈，离线可用</div>
+      </div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-row-icon">06</div>
+      <div>
+        <div class="tech-row-name">移动端适配画布</div>
+        <div class="tech-row-desc">375×667 画布尺寸，原生移动端体验与触觉振动</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Emotional design -->
+<section class="emotion-section">
+  <div class="emotion-inner">
+    <div class="reveal">
+      <div class="section-label">EMOTIONAL DESIGN</div>
+      <h2 class="section-title">情感<em>设计哲学</em></h2>
+      <p class="section-desc">有米的小馆不是工具，是一段关系。三层升级的情感曲线，让用户从"它挺有用"，慢慢走到"它在等我回家"。</p>
+    </div>
+    <div class="emotion-layers">
+      <div class="emotion-card reveal">
+        <div class="emotion-stage">第一层</div>
+        <div class="emotion-key">有用 <em>· Useful</em></div>
+        <div class="emotion-desc">先把"今天吃什么"这件事解决好。权重转盘给出合理的推荐，忌口过滤、历史调整让结果真的可用——这是关系建立的起点。</div>
+        <div class="emotion-quote">"转盘挺有用。"</div>
+      </div>
+      <div class="emotion-card reveal">
+        <div class="emotion-stage">第二层</div>
+        <div class="emotion-key">懂我 <em>· Understands</em></div>
+        <div class="emotion-desc">它记得你不吃芹菜，记得下雨天你想喝热汤，记得你连吃三天辣该换口味了。当推荐开始"对了"，信任就悄悄长出来了。</div>
+        <div class="emotion-quote">"它好像懂我。"</div>
+      </div>
+      <div class="emotion-card reveal">
+        <div class="emotion-stage">第三层</div>
+        <div class="emotion-key">等我回家 <em>· Waiting</em></div>
+        <div class="emotion-desc">当你习惯了每天打开小馆，看到有米在那儿等你，记住你又来了——决策工具就变成了一个会等你回来的小角落。</div>
+        <div class="emotion-quote">"它在等我回家。"</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Next project -->
+<section class="next-project">
+  <div class="next-inner">
+    <div>
+      <div class="next-label">下一个项目</div>
+      <div class="next-title">标准对数视力表 · <em>E视力测试</em></div>
+    </div>
+    <a href="vision-test.html" class="next-btn">
+      查看项目
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- 13. Footer -->
+<footer>© 2026 CC · 用代码构建，用数据思考</footer>
+
+<!-- 14. Back-to-top button -->
+<button class="back-to-top" id="backToTop" aria-label="返回顶部">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+
+<!-- 15. JavaScript -->
+<script>
+// Scroll Reveal Animation
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Nav background + scroll progress + back to top
+const nav = document.querySelector('.nav');
+const scrollProgress = document.getElementById('scrollProgress');
+const backToTop = document.getElementById('backToTop');
+
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+
+  if (scrollTop > 50) {
+    nav.style.background = 'rgba(245, 242, 236, 0.92)';
+    nav.style.boxShadow = '0 1px 12px rgba(28, 28, 26, 0.04)';
+  } else {
+    nav.style.background = 'rgba(245, 242, 236, 0.7)';
+    nav.style.boxShadow = 'none';
+  }
+
+  scrollProgress.style.width = scrollPercent + '%';
+
+  if (scrollTop > 600) {
+    backToTop.classList.add('visible');
+  } else {
+    backToTop.classList.remove('visible');
+  }
+});
+
+backToTop.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// Page fade-in on load
+document.body.classList.add('page-fade');
+</script>
+
+</body>
+</html>
