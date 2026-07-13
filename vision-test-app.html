@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>标准对数视力表 - E视力测试 (GB 11533-2011)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --accent-dark: #1d4ed8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --border: #e2e8f0;
+    --border-dark: #cbd5e1;
+  }
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 1400px;
+    min-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-logo {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-logo svg { width: 22px; height: 22px; }
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .header-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .control-group label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  select {
+    padding: 6px 10px;
+    border: 1.5px solid var(--border-dark);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--surface);
+    cursor: pointer;
+    outline: none;
+  }
+  select:focus { border-color: var(--accent); }
+  .btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1.5px solid var(--border-dark);
+  }
+  .btn-secondary:hover { background: var(--bg); }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Main */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    gap: 1px;
+    background: var(--border);
+  }
+
+  /* Chart Panel */
+  .chart-panel {
+    flex: 1;
+    background: var(--surface);
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    padding: 16px 0;
+  }
+  .chart-panel::-webkit-scrollbar { width: 8px; }
+  .chart-panel::-webkit-scrollbar-track { background: transparent; }
+  .chart-panel::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 4px; }
+  #chartCanvas {
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* Arrow Indicator */
+  .arrow-indicator {
+    position: fixed;
+    display: none;
+    z-index: 20;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.3));
+  }
+  .arrow-indicator.active { display: block; }
+  .arrow-indicator svg {
+    width: 28px;
+    height: 36px;
+  }
+
+  /* Control Panel */
+  .control-panel {
+    width: 300px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 20px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .control-panel::-webkit-scrollbar { width: 6px; }
+  .control-panel::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
+
+  .panel-section {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    background: var(--bg);
+  }
+  .panel-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  /* Direction Pad */
+  .dir-pad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .dir-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .dir-btn {
+    width: 72px;
+    height: 56px;
+    border: 2px solid var(--border-dark);
+    border-radius: 12px;
+    background: var(--surface);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+  .dir-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent-dark);
+  }
+  .dir-btn:active {
+    transform: scale(0.95);
+  }
+  .dir-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--border);
+  }
+  .dir-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  /* Status */
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .status-item {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  .status-item-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .status-item-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Result Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-content {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 40px;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-vision {
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .modal-label {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .modal-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--accent-light);
+    border-radius: 12px;
+  }
+  .modal-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .modal-stat {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .modal-stat-label { font-size: 12px; color: var(--text-secondary); }
+  .modal-stat-value { font-size: 20px; font-weight: 700; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    padding: 16px 40px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .toast.correct { background: var(--success); }
+  .toast.wrong { background: var(--danger); }
+
+  /* Intro hint */
+  .intro-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .main { flex-direction: column; }
+    .control-panel {
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      padding: 12px;
+      gap: 12px;
+    }
+    .panel-section { flex: 1; min-width: 200px; }
+    .chart-panel { min-height: 350px; flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16M4 12h10M4 18h16"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">标准对数视力表</div>
+        <div class="header-sub">GB 11533-2011 | 5分记录法</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="control-group">
+        <label for="distanceSelect">测试距离</label>
+        <select id="distanceSelect">
+          <option value="0.4">40 厘米</option>
+          <option value="0.5">50 厘米</option>
+          <option value="0.6">60 厘米</option>
+          <option value="0.7">70 厘米</option>
+          <option value="0.8">80 厘米</option>
+          <option value="0.9">90 厘米</option>
+          <option value="1">1 米</option>
+          <option value="2">2 米</option>
+          <option value="3">3 米</option>
+          <option value="4">4 米</option>
+          <option value="5" selected>5 米（标准）</option>
+          <option value="6">6 米</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="startBtn" onclick="startTest()">开始测试</button>
+      <button class="btn btn-secondary" id="resetBtn" onclick="resetTest()">重置</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Chart Panel -->
+    <div class="chart-panel" id="chartPanel">
+      <canvas id="chartCanvas"></canvas>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+      <!-- Direction Buttons -->
+      <div class="panel-section">
+        <div class="panel-section-title">开口方向</div>
+        <div class="dir-pad">
+          <div class="dir-row">
+            <button class="dir-btn" id="btnUp" onclick="answer('up')" disabled>↑</button>
+          </div>
+          <div class="dir-row">
+            <button class="dir-btn" id="btnLeft" onclick="answer('left')" disabled>←</button>
+            <button class="dir-btn" id="btnRight" onclick="answer('right')" disabled>→</button>
+          </div>
+          <div class="dir-row">
+            <button class="dir-btn" id="btnDown" onclick="answer('down')" disabled>↓</button>
+          </div>
+          <div class="dir-hint">键盘: ↑↓←→ 或 WASD</div>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="panel-section">
+        <div class="panel-section-title">测试状态</div>
+        <div class="status-grid">
+          <div class="status-item">
+            <div class="status-item-label">进度</div>
+            <div class="status-item-value" id="statusProgress">--</div>
+          </div>
+          <div class="status-item">
+            <div class="status-item-label">正确</div>
+            <div class="status-item-value" id="statusCorrect" style="color:var(--success)">0</div>
+          </div>
+          <div class="status-item">
+            <div class="status-item-label">错误</div>
+            <div class="status-item-value" id="statusWrong" style="color:var(--danger)">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hint -->
+      <div class="intro-hint">
+        请坐在选定的距离处，单眼测试，辨认视标开口方向。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Arrow Indicator -->
+<div class="arrow-indicator" id="arrowIndicator">
+  <svg viewBox="0 0 28 36" fill="none">
+    <path d="M14 0 L14 26 M4 16 L14 26 L24 16" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="14" cy="30" r="3" fill="#ef4444"/>
+  </svg>
+</div>
+
+<!-- Result Modal -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-content">
+    <div class="modal-vision" id="modalVision">5.0</div>
+    <div class="modal-label" id="modalLabel">视力正常</div>
+    <div class="modal-desc" id="modalDesc">您的视力处于正常范围。</div>
+    <div class="modal-stats">
+      <div class="modal-stat">
+        <div class="modal-stat-label">测试距离</div>
+        <div class="modal-stat-value" id="modalDist">5米</div>
+      </div>
+      <div class="modal-stat">
+        <div class="modal-stat-label">答对题数</div>
+        <div class="modal-stat-value" id="modalCorrect">0</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:15px;" onclick="closeResult()">确定</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ============ Constants ============
+  const DIRECTIONS = ['up', 'down', 'left', 'right'];
+  const DIR_NAMES = { up: '上', down: '下', left: '左', right: '右' };
+  const BASE_SIZE_MM = 7.272; // 5.0级在5米处的E字边长(mm)
+  const BASE_DISTANCE = 5; // 标准测试距离(米)
+
+  // GB 11533-2011 标准对数视力表数据
+  // 5分记录法、小数记录法
+  const LEVELS = [
+    { five: '4.0', decimal: 0.1 },
+    { five: '4.1', decimal: 0.12 },
+    { five: '4.2', decimal: 0.15 },
+    { five: '4.3', decimal: 0.2 },
+    { five: '4.4', decimal: 0.25 },
+    { five: '4.5', decimal: 0.3 },
+    { five: '4.6', decimal: 0.4 },
+    { five: '4.7', decimal: 0.5 },
+    { five: '4.8', decimal: 0.6 },
+    { five: '4.9', decimal: 0.8 },
+    { five: '5.0', decimal: 1.0 },
+    { five: '5.1', decimal: 1.2 },
+    { five: '5.2', decimal: 1.5 },
+    { five: '5.3', decimal: 2.0 }
+  ];
+
+  // ============ State ============
+  let currentDistance = 5;
+  let testState = {
+    isTesting: false,
+    currentLevelIndex: 0,
+    currentEIndex: 0,
+    levelResults: [], // array of booleans for current level
+    totalCorrect: 0,
+    totalWrong: 0,
+    finishedLevels: [] // { levelIndex, correctCount }
+  };
+  let chartRowHeights = [];
+  let chartLayout = { width: 0, labelWidth: 55, paddingRight: 15 };
+
+  // ============ Utils ============
+  function formatDistance(d) {
+    return d < 1 ? Math.round(d * 100) + '厘米' : d + '米';
+  }
+
+  function mmToPx(mm) {
+    // 假设标准96 DPI (96 px per inch = 96/25.4 px per mm)
+    return mm * 96 / 25.4;
+  }
+
+  function getSizeMm(level, distance) {
+    // 标准尺寸(5米时) = BASE_SIZE_MM / decimal
+    // 根据当前距离缩放: 比例 = distance / BASE_DISTANCE
+    const standardSize = BASE_SIZE_MM / level.decimal;
+    const scale = distance / BASE_DISTANCE;
+    return standardSize * scale;
+  }
+
+  function getRowHeight(level, distance) {
+    const sizeMm = getSizeMm(level, distance);
+    const sizePx = mmToPx(sizeMm);
+    return Math.max(sizePx + 28, 52);
+  }
+
+  // ============ Init Directions ============
+  function initDirections() {
+    for (const level of LEVELS) {
+      level.directions = [];
+      for (let i = 0; i < 5; i++) {
+        level.directions.push(DIRECTIONS[Math.floor(Math.random() * 4)]);
+      }
+    }
+  }
+
+  // ============ Draw E ============
+  function drawE(ctx, cx, cy, size, direction) {
+    const bar = size * 0.2;
+    const gap = size * 0.2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    let rotation = 0;
+    switch (direction) {
+      case 'up': rotation = -Math.PI / 2; break;
+      case 'down': rotation = Math.PI / 2; break;
+      case 'left': rotation = Math.PI; break;
+      case 'right': rotation = 0; break;
+    }
+    ctx.rotate(rotation);
+
+    ctx.fillStyle = '#1e293b';
+
+    // Standard E (opening to the right)
+    // Vertical bar (left side)
+    ctx.fillRect(-size / 2, -size / 2, bar, size);
+    // Top horizontal bar
+    ctx.fillRect(-size / 2 + bar, -size / 2, size - bar, bar);
+    // Middle horizontal bar (with gap on right)
+    ctx.fillRect(-size / 2 + bar, -bar / 2, size - bar - gap, bar);
+    // Bottom horizontal bar
+    ctx.fillRect(-size / 2 + bar, size / 2 - bar, size - bar, bar);
+
+    ctx.restore();
+  }
+
+  // ============ Draw Chart ============
+  function drawChart() {
+    const canvas = document.getElementById('chartCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('chartPanel');
+    const dpr = window.devicePixelRatio || 1;
+
+    const containerWidth = container.clientWidth;
+    chartLayout.width = containerWidth;
+
+    // Calculate row heights
+    chartRowHeights = [];
+    let totalHeight = 0;
+    for (const level of LEVELS) {
+      const h = getRowHeight(level, currentDistance);
+      chartRowHeights.push(h);
+      totalHeight += h;
+    }
+
+    // Setup canvas
+    canvas.width = containerWidth * dpr;
+    canvas.height = totalHeight * dpr;
+    canvas.style.width = containerWidth + 'px';
+    canvas.style.height = totalHeight + 'px';
+    ctx.scale(dpr, dpr);
+
+    // Clear
+    ctx.clearRect(0, 0, containerWidth, totalHeight);
+
+    // Draw each row
+    let y = 0;
+    const labelW = chartLayout.labelWidth;
+    const padR = chartLayout.paddingRight;
+    const availW = containerWidth - labelW - padR;
+
+    for (let i = 0; i < LEVELS.length; i++) {
+      const level = LEVELS[i];
+      const rowH = chartRowHeights[i];
+      const sizeMm = getSizeMm(level, currentDistance);
+      const sizePx = mmToPx(sizeMm);
+
+      // Row background (alternating)
+      ctx.fillStyle = i % 2 === 0 ? '#f8fafc' : '#ffffff';
+      ctx.fillRect(0, y, containerWidth, rowH);
+
+      // Level label
+      ctx.fillStyle = '#475569';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(level.five, labelW / 2, y + rowH / 2);
+
+      // Calculate how many E's can fit in this row without overlapping
+      const eCount = Math.min(Math.max(Math.floor(availW / (sizePx + 16)), 1), 5);
+      const eSpacing = availW / eCount;
+
+      // Draw E's
+      for (let j = 0; j < eCount; j++) {
+        const ex = labelW + j * eSpacing + eSpacing / 2;
+        const ey = y + rowH / 2;
+
+        // Highlight current test E
+        if (testState.isTesting && testState.currentLevelIndex === i && testState.currentEIndex === j) {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(ex - sizePx / 2 - 5, ey - sizePx / 2 - 5, sizePx + 10, sizePx + 10);
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.08)';
+          ctx.fillRect(ex - sizePx / 2 - 5, ey - sizePx / 2 - 5, sizePx + 10, sizePx + 10);
+        }
+
+        // Draw finished E marks
+        const fl = testState.finishedLevels.find(fl => fl.levelIndex === i);
+        if (fl && j < fl.correctMask.length) {
+          const isCorrect = fl.correctMask[j];
+          ctx.globalAlpha = 0.25;
+          ctx.fillStyle = isCorrect ? '#10b981' : '#ef4444';
+          ctx.fillRect(ex - sizePx / 2 - 2, ey - sizePx / 2 - 2, sizePx + 4, sizePx + 4);
+          ctx.globalAlpha = 1;
+        }
+
+        drawE(ctx, ex, ey, sizePx, level.directions[j]);
+      }
+
+      // Divider line
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y + rowH);
+      ctx.lineTo(containerWidth, y + rowH);
+      ctx.stroke();
+
+      y += rowH;
+    }
+
+    // Update arrow position after drawing
+    updateArrowPosition();
+  }
+
+  // ============ Arrow Position ============
+  function updateArrowPosition() {
+    const arrow = document.getElementById('arrowIndicator');
+    if (!testState.isTesting) {
+      arrow.classList.remove('active');
+      return;
+    }
+
+    const canvas = document.getElementById('chartCanvas');
+    const canvasRect = canvas.getBoundingClientRect();
+    const level = LEVELS[testState.currentLevelIndex];
+    const sizeMm = getSizeMm(level, currentDistance);
+    const sizePx = mmToPx(sizeMm);
+
+    // Calculate Y position
+    let eY = 0;
+    for (let i = 0; i < testState.currentLevelIndex; i++) {
+      eY += chartRowHeights[i];
+    }
+    eY += chartRowHeights[testState.currentLevelIndex] / 2;
+
+    // Calculate X position
+    const labelW = chartLayout.labelWidth;
+    const availW = chartLayout.width - labelW - chartLayout.paddingRight;
+    const eCount = Math.min(Math.max(Math.floor(availW / (sizePx + 16)), 1), 5);
+    const eSpacing = availW / eCount;
+    const eX = labelW + testState.currentEIndex * eSpacing + eSpacing / 2;
+
+    // Arrow position (above the E)
+    const arrowX = canvasRect.left + eX - 14;
+    const arrowY = canvasRect.top + eY - sizePx / 2 - 38;
+
+    arrow.style.left = arrowX + 'px';
+    arrow.style.top = arrowY + 'px';
+    arrow.classList.add('active');
+  }
+
+  // ============ Scroll to Current E ============
+  function scrollToCurrentE() {
+    const panel = document.getElementById('chartPanel');
+
+    let y = 0;
+    for (let i = 0; i < testState.currentLevelIndex; i++) {
+      y += chartRowHeights[i];
+    }
+    const rowH = chartRowHeights[testState.currentLevelIndex];
+    const targetY = y + rowH / 2 - panel.clientHeight / 2;
+
+    panel.scrollTo({ top: targetY, behavior: 'smooth' });
+  }
+
+  // ============ UI Updates ============
+  function updateUI() {
+    const statusProgress = document.getElementById('statusProgress');
+    const statusCorrect = document.getElementById('statusCorrect');
+    const statusWrong = document.getElementById('statusWrong');
+    const startBtn = document.getElementById('startBtn');
+    const dirBtns = ['btnUp', 'btnDown', 'btnLeft', 'btnRight'];
+
+    if (!testState.isTesting) {
+      statusProgress.textContent = '--';
+      startBtn.textContent = '开始测试';
+      startBtn.disabled = false;
+      dirBtns.forEach(id => document.getElementById(id).disabled = true);
+      return;
+    }
+
+    const level = LEVELS[testState.currentLevelIndex];
+    const sMm2 = getSizeMm(level, currentDistance);
+    const sPx2 = mmToPx(sMm2);
+    const aW2 = Math.max(chartLayout.width - chartLayout.labelWidth - chartLayout.paddingRight, 100);
+    const eCnt2 = Math.min(Math.max(Math.floor(aW2 / (sPx2 + 16)), 1), 5);
+
+    statusProgress.textContent = (testState.currentEIndex + 1) + ' / ' + eCnt2;
+    statusCorrect.textContent = testState.totalCorrect;
+    statusWrong.textContent = testState.totalWrong;
+    startBtn.textContent = '测试中...';
+    startBtn.disabled = true;
+    dirBtns.forEach(id => document.getElementById(id).disabled = false);
+
+    drawChart();
+    scrollToCurrentE();
+    updateArrowPosition();
+  }
+
+  // ============ Test Control ============
+  function startTest() {
+    if (testState.isTesting) return;
+
+    // Reset
+    testState = {
+      isTesting: true,
+      currentLevelIndex: 0,
+      currentEIndex: 0,
+      levelResults: [],
+      totalCorrect: 0,
+      totalWrong: 0,
+      finishedLevels: []
+    };
+
+    // Regenerate directions
+    initDirections();
+
+    updateUI();
+  }
+
+  function resetTest() {
+    testState = {
+      isTesting: false,
+      currentLevelIndex: 0,
+      currentEIndex: 0,
+      levelResults: [],
+      totalCorrect: 0,
+      totalWrong: 0,
+      finishedLevels: []
+    };
+    document.getElementById('arrowIndicator').classList.remove('active');
+    drawChart();
+    updateUI();
+  }
+
+  function answer(direction) {
+    if (!testState.isTesting) return;
+
+    const level = LEVELS[testState.currentLevelIndex];
+    const correctDir = level.directions[testState.currentEIndex];
+    const isCorrect = direction === correctDir;
+
+    testState.levelResults.push(isCorrect);
+    if (isCorrect) {
+      testState.totalCorrect++;
+      showToast('正确', 'correct');
+    } else {
+      testState.totalWrong++;
+      showToast('错误', 'wrong');
+    }
+
+    testState.currentEIndex++;
+
+    // Calculate eCount for current level
+    const lvl = LEVELS[testState.currentLevelIndex];
+    const sMm = getSizeMm(lvl, currentDistance);
+    const sPx = mmToPx(sMm);
+    const aW = Math.max(chartLayout.width - chartLayout.labelWidth - chartLayout.paddingRight, 100);
+    const eCnt = Math.min(Math.max(Math.floor(aW / (sPx + 16)), 1), 5);
+
+    // Check if level is finished
+    if (testState.currentEIndex >= eCnt) {
+      finishLevel();
+    } else {
+      updateUI();
+    }
+  }
+
+  function finishLevel() {
+    const lvl = LEVELS[testState.currentLevelIndex];
+    const sMm = getSizeMm(lvl, currentDistance);
+    const sPx = mmToPx(sMm);
+    const aW = Math.max(chartLayout.width - chartLayout.labelWidth - chartLayout.paddingRight, 100);
+    const eCnt = Math.min(Math.max(Math.floor(aW / (sPx + 16)), 1), 5);
+
+    const correctCount = testState.levelResults.filter(r => r).length;
+    testState.finishedLevels.push({
+      levelIndex: testState.currentLevelIndex,
+      correctMask: [...testState.levelResults],
+      eCount: eCnt
+    });
+
+    const passThreshold = Math.max(Math.ceil(eCnt * 0.8), 1);
+    const canProceed = correctCount >= passThreshold;
+
+    if (!canProceed) {
+      // Cannot see this level, test ends
+      finishTest();
+      return;
+    }
+
+    // Proceed to next level
+    testState.currentLevelIndex++;
+    testState.currentEIndex = 0;
+    testState.levelResults = [];
+
+    if (testState.currentLevelIndex >= LEVELS.length) {
+      finishTest();
+      return;
+    }
+
+    updateUI();
+  }
+
+  function finishTest() {
+    testState.isTesting = false;
+
+    // Calculate best vision
+    let bestLevelIndex = -1;
+    for (const fl of testState.finishedLevels) {
+      const correctCount = fl.correctMask.filter(r => r).length;
+      const passThreshold = Math.max(Math.ceil(fl.eCount * 0.8), 1);
+      if (correctCount >= passThreshold) {
+        bestLevelIndex = fl.levelIndex;
+      }
+    }
+
+    let vision, label, desc;
+    if (bestLevelIndex >= 0) {
+      vision = LEVELS[bestLevelIndex].five;
+    } else {
+      vision = '<4.0';
+    }
+
+    const v = bestLevelIndex >= 0 ? LEVELS[bestLevelIndex].decimal : 0;
+    if (v >= 1.0) {
+      label = '视力正常';
+      desc = '您的视力处于正常范围，请继续保持良好的用眼习惯，注意用眼卫生。';
+    } else if (v >= 0.5) {
+      label = '轻度视力下降';
+      desc = '视力略有下降，建议适当休息眼睛，减少长时间近距离用眼，多做户外活动。';
+    } else if (v >= 0.3) {
+      label = '中度视力下降';
+      desc = '视力明显下降，建议前往正规医院眼科进行专业检查。';
+    } else {
+      label = '视力较差';
+      desc = '视力较差，建议尽快到眼科就诊，排除眼部疾病并考虑配戴眼镜。';
+    }
+
+    document.getElementById('modalVision').textContent = vision;
+    document.getElementById('modalLabel').textContent = label;
+    document.getElementById('modalDesc').textContent = desc;
+    document.getElementById('modalDist').textContent = formatDistance(currentDistance);
+    document.getElementById('modalCorrect').textContent = testState.totalCorrect;
+
+    document.getElementById('resultModal').classList.add('active');
+
+    // Disable direction buttons
+    ['btnUp', 'btnDown', 'btnLeft', 'btnRight'].forEach(id => {
+      document.getElementById(id).disabled = true;
+    });
+    document.getElementById('startBtn').textContent = '开始测试';
+    document.getElementById('startBtn').disabled = false;
+
+    drawChart();
+    updateArrowPosition();
+  }
+
+  function closeResult() {
+    document.getElementById('resultModal').classList.remove('active');
+    resetTest();
+  }
+
+  // ============ Toast ============
+  function showToast(text, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = text;
+    toast.className = 'toast ' + type + ' show';
+    setTimeout(() => toast.classList.remove('show'), 400);
+  }
+
+  // ============ Distance Change ============
+  document.getElementById('distanceSelect').addEventListener('change', (e) => {
+    currentDistance = parseFloat(e.target.value);
+    if (!testState.isTesting) {
+      drawChart();
+    } else {
+      // Recalculate and redraw during test
+      drawChart();
+      scrollToCurrentE();
+    }
+  });
+
+  // ============ Keyboard Support ============
+  document.addEventListener('keydown', (e) => {
+    if (!testState.isTesting) return;
+    switch (e.key) {
+      case 'ArrowUp': case 'w': case 'W': answer('up'); break;
+      case 'ArrowDown': case 's': case 'S': answer('down'); break;
+      case 'ArrowLeft': case 'a': case 'A': answer('left'); break;
+      case 'ArrowRight': case 'd': case 'D': answer('right'); break;
+    }
+  });
+
+  // ============ Scroll & Resize ============
+  document.getElementById('chartPanel').addEventListener('scroll', () => {
+    if (testState.isTesting) updateArrowPosition();
+  });
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      drawChart();
+      if (testState.isTesting) {
+        updateArrowPosition();
+      }
+    }, 150);
+  });
+
+  // ============ Init ============
+  initDirections();
+  drawChart();
+  updateUI();
+</script>
+
+</body>
+</html>
