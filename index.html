@@ -1600,12 +1600,16 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // ========================================
 document.querySelectorAll('.project-card').forEach(card => {
   card.addEventListener('click', function(e) {
+    // Don't intercept clicks on actual links inside the card
+    if (e.target.closest('a.project-link') || e.target.closest('a.project-card-link')) return;
     // Add a subtle fade effect before navigating
+    const link = this.querySelector('.project-card-link');
+    if (!link) return;
     e.preventDefault();
     document.body.style.transition = 'opacity 0.3s ease';
     document.body.style.opacity = '0.6';
     setTimeout(() => {
-      window.location.href = this.href;
+      window.location.href = link.href;
     }, 200);
   });
 });
